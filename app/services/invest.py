@@ -1,11 +1,9 @@
-from typing import TypeVar, Union
+from typing import TypeVar
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import Base
-from app.crud import charity_project_crud, donation_crud
 from app.crud.base import CRUDBase
-from app.models import CharityProject, Donation
 
 
 ModelType = TypeVar('ModelType', bound=Base)
@@ -72,17 +70,3 @@ async def to_invest(
             # Новая сумма инвеста после получения доната или наоборот.
             db_obj.invested_amount = invested_amount
     return db_obj
-
-
-# async def check_obj_type_to_invest(
-#         session: AsyncSession,
-#         db_obj: Union[CharityProject, Donation]
-# ) -> Union[CharityProject, Donation]:
-#     if isinstance(db_obj, CharityProject):
-#         return await to_invest(
-#             session, db_obj, charity_project_crud, donation_crud
-#         )
-
-#     return await to_invest(
-#         session, db_obj, donation_crud, charity_project_crud
-#     )
