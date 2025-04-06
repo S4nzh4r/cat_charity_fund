@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.db import get_async_session
 from app.core.user import current_superuser, current_user
 from app.crud import charity_project_crud, donation_crud
-from app.models import User
+from app.models import Donation, User
 from app.schemas.donation import DonationAllDB, DonationCreate, DonationUserDB
 from app.services.invest import to_invest
 
@@ -20,7 +20,7 @@ async def create_donation(
     donation: DonationCreate,
     session: AsyncSession = Depends(get_async_session),
     user: User = Depends(current_user),
-):
+) -> Donation:
     donation_db = await donation_crud.create(
         donation, session, user
     )
@@ -40,7 +40,7 @@ async def create_donation(
 async def get_user_donations(
     session: AsyncSession = Depends(get_async_session),
     user: User = Depends(current_user)
-):
+) -> list[Donation]:
     """Получает список всех донатов для текущего пользователя."""
     donations = await donation_crud.get_by_user(
         session=session, user=user
@@ -56,7 +56,7 @@ async def get_user_donations(
 )
 async def get_all_donations(
     session: AsyncSession = Depends(get_async_session)
-):
+) -> list[Donation]:
     """Только для суперюзеров."""
     donations = await donation_crud.get_multi(session)
     return donations

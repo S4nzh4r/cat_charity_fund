@@ -17,7 +17,7 @@ class CRUDDonation(CRUDBase[
             self,
             session: AsyncSession,
             user: User
-    ):
+    ) -> list[Donation]:
         donations = await session.execute(
             select(Donation).where(
                 Donation.user_id == user.id

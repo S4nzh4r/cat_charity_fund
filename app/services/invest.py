@@ -1,8 +1,9 @@
-from typing import TypeVar
+from typing import TypeVar, Union
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import Base
+from app.crud import CRUDCharityProject, CRUDDonation
 from app.crud.base import CRUDBase
 
 
@@ -15,15 +16,15 @@ async def check_obj_amount(
         crud_obj: CRUDBase
 ) -> None:
     """Функция для проверки не достигла ли требоваемая сумма."""
-    if db_obj.full_amount - db_obj.invested_amount == 0:
+    if db_obj.invested_amount == db_obj.full_amount:
         await crud_obj.close_object(db_obj, session)
 
 
 async def to_invest(
         session: AsyncSession,
         db_obj: ModelType,
-        crud_obj_1: CRUDBase,
-        crud_obj_2: CRUDBase
+        crud_obj_1: Union[CRUDCharityProject, CRUDDonation],
+        crud_obj_2: Union[CRUDCharityProject, CRUDDonation]
 ) -> ModelType:
     """Функция для распределения свободных
     донатов после создания одного из двух проектов."""
@@ -37,7 +38,7 @@ async def to_invest(
     if not_fully_invested:
         for obj in not_fully_invested:
             # Добавляем к сумме инвеста от пожертвования или проекта.
-            invested_amount = invested_amount + (
+            invested_amount += (
                 obj.full_amount - obj.invested_amount
             )
             # Вычисляем остаток для проверки достигла ли
@@ -45,7 +46,7 @@ async def to_invest(
             remain = db_obj.full_amount - invested_amount
             if remain <= 0:  # Если да
                 # Вычисляем сумму инвеста от списка not_fully_invested.
-                obj.invested_amount = obj.invested_amount + (
+                obj.invested_amount += (
                     invested_amount - (remain * -1) - db_obj.invested_amount
                 )
                 # Вычисляем сумму инвеста для нашего только созданного обьекта.
@@ -61,7 +62,7 @@ async def to_invest(
                 break
 
             # Новая сумма инвеста после операций для второго обьекта.
-            obj.invested_amount = obj.invested_amount + (
+            obj.invested_amount += (
                 invested_amount - db_obj.invested_amount
             )
             # Проверка на full_amount для второго обьекта.

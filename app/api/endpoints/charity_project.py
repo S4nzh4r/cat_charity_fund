@@ -9,6 +9,7 @@ from app.api.validators import (
 from app.core.db import get_async_session
 from app.core.user import current_superuser
 from app.crud import charity_project_crud, donation_crud
+from app.models import CharityProject
 from app.schemas.charity_project import (
     CharityProjectCreate, CharityProjectDB, CharityProjectUpdate
 )
@@ -25,9 +26,9 @@ router = APIRouter()
     dependencies=[Depends(current_superuser)],
 )
 async def create_new_charity_project(
-        charity_prj: CharityProjectCreate,
-        session: AsyncSession = Depends(get_async_session)
-):
+    charity_prj: CharityProjectCreate,
+    session: AsyncSession = Depends(get_async_session)
+) -> CharityProject:
     """Только для суперюзеров."""
     await check_name_duplicate(charity_prj.name, session)
     new_charity_prj = await charity_project_crud.create(charity_prj, session)
@@ -44,7 +45,7 @@ async def create_new_charity_project(
 )
 async def get_all_charity_projects(
     session: AsyncSession = Depends(get_async_session)
-):
+) -> list[CharityProject]:
     charity_projects = await charity_project_crud.get_multi(session)
     return charity_projects
 
@@ -59,7 +60,7 @@ async def partially_update_project(
     project_id: int,
     obj_in: CharityProjectUpdate,
     session: AsyncSession = Depends(get_async_session)
-):
+) -> CharityProject:
     """Только для суперюзеров."""
     charity_prj = await check_project_exists(
         project_id, session
@@ -92,7 +93,7 @@ async def partially_update_project(
 async def remove_charity_project(
     project_id: int,
     session: AsyncSession = Depends(get_async_session)
-):
+) -> CharityProject:
     """Только для суперюзеров."""
     charity_prj = await check_project_exists(
         project_id, session
