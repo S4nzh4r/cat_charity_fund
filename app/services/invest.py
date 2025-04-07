@@ -46,11 +46,11 @@ async def to_invest(
             remain = db_obj.full_amount - invested_amount
             if remain <= 0:  # Если да
                 # Вычисляем сумму инвеста от списка not_fully_invested.
-                obj.invested_amount += (
-                    invested_amount - (remain * -1) - db_obj.invested_amount
-                )
+                # Например затраты от донатов для проекта.
+                obj.invested_amount = obj.full_amount + remain
+
                 # Вычисляем сумму инвеста для нашего только созданного обьекта.
-                db_obj.invested_amount = invested_amount - (remain * -1)
+                db_obj.invested_amount = invested_amount + remain
 
                 # Проверка на full_amount для второго обьекта.
                 await check_obj_amount(obj, session, crud_obj_2)
@@ -61,12 +61,12 @@ async def to_invest(
                 )
                 break
 
-            # Новая сумма инвеста после операций для второго обьекта.
-            obj.invested_amount += (
-                invested_amount - db_obj.invested_amount
-            )
-            # Проверка на full_amount для второго обьекта.
-            await check_obj_amount(obj, session, crud_obj_2)
+            # Если нужная сумма не набролась...
+            # значит мы потратили все средства от донатов или
+            # наоборот закрыли проект из списка not_fully_invested.
+            obj.invested_amount = obj.full_amount
+
+            await crud_obj_2.close_object(obj, session)
 
             # Новая сумма инвеста после получения доната или наоборот.
             db_obj.invested_amount = invested_amount
